@@ -739,9 +739,7 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     FString APIKey,
     FString LobbyID,
     FString PlayerID,
-    FString ConfigName,
-    FString RequesterID,
-    bool bIsKick)
+    FString ConfigName)
 {
     UPlayflowLeaveLobby* Node = NewObject<UPlayflowLeaveLobby>();
     Node->WorldContextObject = WorldContextObject;
@@ -749,8 +747,6 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     Node->LobbyID = LobbyID;
     Node->PlayerID = PlayerID;
     Node->ConfigName = ConfigName;
-    Node->RequesterID = RequesterID;
-    Node->bIsKick = bIsKick;
 
     return Node;
 }
@@ -758,12 +754,10 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
 void UPlayflowLeaveLobby::Activate()
 {
     FString URL = FString::Printf(
-        TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players/%s?name=%s&requesterId=%s&isKick=%s"),
+        TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players/%s?name=%s&isKick=false"),
         *LobbyID,
         *PlayerID,
-        *ConfigName,
-        *RequesterID,
-        bIsKick ? TEXT("true") : TEXT("false")
+        *ConfigName
     );
 
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
@@ -774,7 +768,7 @@ void UPlayflowLeaveLobby::Activate()
     HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlayflowLeaveLobby::OnResponseReceived);
     HttpRequest->ProcessRequest();
 
-    UE_LOG(LogTemp, Log, TEXT("Playflow: %s lobby - URL: %s"), bIsKick ? TEXT("Kicking from") : TEXT("Leaving"), *URL);
+    UE_LOG(LogTemp, Log, TEXT("Playflow: Leaving lobby - URL: %s"), *URL);
 }
 
 void UPlayflowLeaveLobby::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -802,7 +796,7 @@ void UPlayflowLeaveLobby::OnResponseReceived(FHttpRequestPtr Request, FHttpRespo
 
                     if (bSuccess)
                     {
-                        UE_LOG(LogTemp, Log, TEXT("Playflow: Player %s successfully"), bIsKick ? TEXT("kicked") : TEXT("left"));
+                        UE_LOG(LogTemp, Log, TEXT("Playflow: Player left lobby successfully"));
                         OnSuccess.Broadcast(TEXT(""));
                         return;
                     }
@@ -814,20 +808,20 @@ void UPlayflowLeaveLobby::OnResponseReceived(FHttpRequestPtr Request, FHttpRespo
                         }
                         else
                         {
-                            ErrorMessage = TEXT("Leave/Kick returned success: false");
+                            ErrorMessage = TEXT("Leave lobby returned success: false");
                         }
                     }
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Log, TEXT("Playflow: Player %s successfully (no success field)"), bIsKick ? TEXT("kicked") : TEXT("left"));
+                    UE_LOG(LogTemp, Log, TEXT("Playflow: Player left lobby successfully (no success field)"));
                     OnSuccess.Broadcast(TEXT(""));
                     return;
                 }
             }
             else
             {
-                UE_LOG(LogTemp, Log, TEXT("Playflow: Player %s successfully (non-JSON response)"), bIsKick ? TEXT("kicked") : TEXT("left"));
+                UE_LOG(LogTemp, Log, TEXT("Playflow: Player left lobby successfully (non-JSON response)"));
                 OnSuccess.Broadcast(TEXT(""));
                 return;
             }
@@ -896,7 +890,134 @@ void UPlayflowLeaveLobby::OnResponseReceived(FHttpRequestPtr Request, FHttpRespo
         UE_LOG(LogTemp, Error, TEXT("Playflow: Leave lobby request failed"));
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("Playflow: Leave/Kick lobby failed - %s"), *ErrorMessage);
+    UE_LOG(LogTemp, Warning, TEXT("Playflow: Leave lobby failed - %s"), *ErrorMessage);
+    OnFailure.Broadcast(ErrorMessage);
+}
+
+UPlayflowKickPlayer* UPlayflowKickPlayer::KickPlayer(
+    UObject* WorldContextObject,
+    FString APIKey,
+    FString LobbyID,
+    FString PlayerID,
+    FString ConfigName,
+    FString RequesterID)
+{
+    UPlayflowKickPlayer* Node = NewObject<UPlayflowKickPlayer>();
+    Node->WorldContextObject = WorldContextObject;
+    Node->APIKey = APIKey;
+    Node->LobbyID = LobbyID;
+    Node->PlayerID = PlayerID;
+    Node->ConfigName = ConfigName;
+    Node->RequesterID = RequesterID;
+
+    return Node;
+}
+
+void UPlayflowKickPlayer::Activate()
+{
+    FString URL = FString::Printf(
+        TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players/%s?name=%s&requesterId=%s&isKick=true"),
+        *LobbyID,
+        *PlayerID,
+        *ConfigName,
+        *RequesterID
+    );
+
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    HttpRequest->SetURL(URL);
+    HttpRequest->SetVerb(TEXT("DELETE"));
+    HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+    HttpRequest->SetHeader(TEXT("api-key"), APIKey);
+    HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlayflowKickPlayer::OnResponseReceived);
+    HttpRequest->ProcessRequest();
+
+    UE_LOG(LogTemp, Log, TEXT("Playflow: Kicking player from lobby - URL: %s"), *URL);
+}
+
+void UPlayflowKickPlayer::OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+    FString ErrorMessage = TEXT("");
+
+    if (bWasSuccessful && Response.IsValid())
+    {
+        int32 ResponseCode = Response->GetResponseCode();
+        FString ResponseString = Response->GetContentAsString();
+
+        UE_LOG(LogTemp, Log, TEXT("Playflow: Kick Player Response Code: %d"), ResponseCode);
+        UE_LOG(LogTemp, Log, TEXT("Playflow: Kick Player Response Body: %s"), *ResponseString);
+
+        if (ResponseCode >= 200 && ResponseCode < 300)
+        {
+            TSharedPtr<FJsonObject> JsonObject;
+            TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseString);
+
+            if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+            {
+                if (JsonObject->HasField(TEXT("success")))
+                {
+                    bool bSuccess = JsonObject->GetBoolField(TEXT("success"));
+
+                    if (bSuccess)
+                    {
+                        UE_LOG(LogTemp, Log, TEXT("Playflow: Player kicked successfully"));
+                        OnSuccess.Broadcast(TEXT(""));
+                        return;
+                    }
+                    else
+                    {
+                        if (JsonObject->HasField(TEXT("message")))
+                        {
+                            ErrorMessage = JsonObject->GetStringField(TEXT("message"));
+                        }
+                        else
+                        {
+                            ErrorMessage = TEXT("Kick player returned success: false");
+                        }
+                    }
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Log, TEXT("Playflow: Player kicked successfully (no success field)"));
+                    OnSuccess.Broadcast(TEXT(""));
+                    return;
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Log, TEXT("Playflow: Player kicked successfully (non-JSON response)"));
+                OnSuccess.Broadcast(TEXT(""));
+                return;
+            }
+        }
+        else
+        {
+            TSharedPtr<FJsonObject> JsonObject;
+            TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseString);
+
+            if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+            {
+                if (JsonObject->HasField(TEXT("message")))
+                {
+                    ErrorMessage = JsonObject->GetStringField(TEXT("message"));
+                }
+                else
+                {
+                    ErrorMessage = FString::Printf(TEXT("HTTP %d: %s"), ResponseCode, *ResponseString);
+                }
+            }
+            else
+            {
+                ErrorMessage = FString::Printf(TEXT("HTTP %d: %s"), ResponseCode, *ResponseString);
+            }
+        }
+    }
+    else
+    {
+        ErrorMessage = TEXT("Request failed - no response from server");
+        UE_LOG(LogTemp, Error, TEXT("Playflow: Kick player request failed"));
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Playflow: Kick player failed - %s"), *ErrorMessage);
     OnFailure.Broadcast(ErrorMessage);
 }
 
