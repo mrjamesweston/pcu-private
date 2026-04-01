@@ -739,8 +739,7 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     FString APIKey,
     FString LobbyID,
     FString PlayerID,
-    FString ConfigName,
-    FString RequesterID)
+    FString ConfigName)
 {
     UPlayflowLeaveLobby* Node = NewObject<UPlayflowLeaveLobby>();
     Node->WorldContextObject = WorldContextObject;
@@ -748,7 +747,6 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     Node->LobbyID = LobbyID;
     Node->PlayerID = PlayerID;
     Node->ConfigName = ConfigName;
-    Node->RequesterID = RequesterID;
 
     return Node;
 }
@@ -760,7 +758,7 @@ void UPlayflowLeaveLobby::Activate()
         *LobbyID,
         *PlayerID,
         *ConfigName,
-        *RequesterID
+        *PlayerID
     );
 
     auto HttpRequest = FHttpModule::Get().CreateRequest();
