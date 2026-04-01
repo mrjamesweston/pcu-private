@@ -51,7 +51,7 @@ void UPlayflowCreateLobby::Activate()
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("POST"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -251,7 +251,7 @@ void UPlayflowGetGameServerInfo::Activate()
 {
     FString URL = FString::Printf(TEXT("https://api.scale.computeflow.cloud/lobbies/%s?name=%s"), *LobbyID, *ConfigName);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("GET"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -451,7 +451,7 @@ void UPlayflowLobbyHeartbeat::Activate()
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("POST"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -560,7 +560,7 @@ void UPlayflowListPlayers::Activate()
 {
     FString URL = FString::Printf(TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players?name=%s"), *LobbyID, *ConfigName);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("GET"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -658,7 +658,7 @@ void UPlayflowGetLobby::Activate()
 {
     FString URL = FString::Printf(TEXT("https://api.scale.computeflow.cloud/lobbies/%s?name=%s"), *LobbyID, *ConfigName);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("GET"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -760,7 +760,7 @@ void UPlayflowLeaveLobby::Activate()
         *ConfigName
     );
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("DELETE"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -923,7 +923,7 @@ void UPlayflowKickPlayer::Activate()
         *RequesterID
     );
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("DELETE"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -1049,7 +1049,7 @@ void UPlayflowJoinLobbyByCode::Activate()
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("POST"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -1318,7 +1318,7 @@ void UPlayflowStartMatchmaking::Activate()
     FString JsonString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("PUT"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -1486,7 +1486,7 @@ void UPlayflowStopMatchmaking::Activate()
     FString JsonString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("PUT"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -1694,7 +1694,7 @@ void UPlayflowUpdatePlayerState::Activate()
     FString JsonString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonString);
     FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("PUT"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -2295,11 +2295,11 @@ void UPlayflowUpdateLobbyRegion::Activate()
     FString RegionString = PlayflowRegionToString(Region);
 
     TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
-    JsonObject->SetStringField("requesterId", RequesterID);
+    JsonObject->SetStringField(TEXT("requesterId"), RequesterID);
 
     TSharedPtr<FJsonObject> SettingsObject = MakeShareable(new FJsonObject);
-    SettingsObject->SetStringField("region", RegionString);
-    JsonObject->SetObjectField("settings", SettingsObject);
+    SettingsObject->SetStringField(TEXT("region"), RegionString);
+    JsonObject->SetObjectField(TEXT("settings"), SettingsObject);
 
     FString ContentString;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&ContentString);
@@ -2308,7 +2308,7 @@ void UPlayflowUpdateLobbyRegion::Activate()
     UE_LOG(LogTemp, Log, TEXT("Playflow: Updating lobby region to: %s"), *RegionString);
     UE_LOG(LogTemp, Log, TEXT("Playflow: PUT %s"), *URL);
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    auto HttpRequest = FHttpModule::Get().CreateRequest();
     HttpRequest->SetURL(URL);
     HttpRequest->SetVerb(TEXT("PUT"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -2516,7 +2516,7 @@ void UPlayflowUpdateLobbyStatus::Activate()
         *ConfigName
     );
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+    auto Request = FHttpModule::Get().CreateRequest();
     Request->SetURL(URL);
     Request->SetVerb(TEXT("PUT"));
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
