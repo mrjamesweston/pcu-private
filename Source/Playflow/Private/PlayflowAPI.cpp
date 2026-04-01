@@ -739,7 +739,8 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     FString APIKey,
     FString LobbyID,
     FString PlayerID,
-    FString ConfigName)
+    FString ConfigName,
+    FString RequesterID)
 {
     UPlayflowLeaveLobby* Node = NewObject<UPlayflowLeaveLobby>();
     Node->WorldContextObject = WorldContextObject;
@@ -747,6 +748,7 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
     Node->LobbyID = LobbyID;
     Node->PlayerID = PlayerID;
     Node->ConfigName = ConfigName;
+    Node->RequesterID = RequesterID;
 
     return Node;
 }
@@ -754,10 +756,11 @@ UPlayflowLeaveLobby* UPlayflowLeaveLobby::LeaveLobby(
 void UPlayflowLeaveLobby::Activate()
 {
     FString URL = FString::Printf(
-        TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players/%s?name=%s&isKick=false"),
+        TEXT("https://api.scale.computeflow.cloud/lobbies/%s/players/%s?name=%s&requesterId=%s&isKick=false"),
         *LobbyID,
         *PlayerID,
-        *ConfigName
+        *ConfigName,
+        *RequesterID
     );
 
     auto HttpRequest = FHttpModule::Get().CreateRequest();
