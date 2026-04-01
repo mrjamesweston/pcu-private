@@ -207,8 +207,7 @@ public:
         FString APIKey,
         FString LobbyID,
         FString PlayerID,
-        FString ConfigName,
-        FString RequesterID
+        FString ConfigName
     );
 
     virtual void Activate() override;
@@ -219,7 +218,6 @@ private:
     FString LobbyID;
     FString PlayerID;
     FString ConfigName;
-    FString RequesterID;
 
     void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
