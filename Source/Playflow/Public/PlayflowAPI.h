@@ -207,9 +207,43 @@ public:
         FString APIKey,
         FString LobbyID,
         FString PlayerID,
+        FString ConfigName
+    );
+
+    virtual void Activate() override;
+
+private:
+    UObject* WorldContextObject;
+    FString APIKey;
+    FString LobbyID;
+    FString PlayerID;
+    FString ConfigName;
+
+    void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKickPlayer, FString, ErrorMessage);
+
+UCLASS()
+class PLAYFLOW_API UPlayflowKickPlayer : public UBlueprintAsyncActionBase
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintAssignable)
+    FOnKickPlayer OnSuccess;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnKickPlayer OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category = "Playflow|Lobby")
+    static UPlayflowKickPlayer* KickPlayer(
+        UObject* WorldContextObject,
+        FString APIKey,
+        FString LobbyID,
+        FString PlayerID,
         FString ConfigName,
-        FString RequesterID,
-        bool bIsKick
+        FString RequesterID
     );
 
     virtual void Activate() override;
@@ -221,7 +255,6 @@ private:
     FString PlayerID;
     FString ConfigName;
     FString RequesterID;
-    bool bIsKick;
 
     void OnResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
