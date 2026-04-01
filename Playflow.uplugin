@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.0.3.0",
+	"FriendlyName": "Playflow Cloud for Unreal",
+	"Description": "Playflow Cloud integration for lobbies and matchmaking.",
+	"Category": "Playflow",
+	"CreatedBy": "Duel Studios",
+	"CreatedByURL": "https://duelstudios.xyz",
+	"DocsURL": "https://duel-studios.gitbook.io/playflow-cloud-for-unreal",
+	"MarketplaceURL": "",
+	"SupportURL": "https://duelstudios.xyz",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Playflow",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "PlayflowEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		}
+	]
+}
